@@ -39,15 +39,7 @@ jobs:
             git checkout "$DEFAULT_BRANCH"
             git reset --hard
 
-            # Create or reset working branch
-            if git ls-remote --exit-code --heads origin "$BRANCH_NAME" &> /dev/null; then
-              echo "Remote branch $BRANCH_NAME exists – checking out"
-              git fetch origin "$BRANCH_NAME"
-              git checkout -B "$BRANCH_NAME" origin/"$BRANCH_NAME"
-            else
-              echo "Remote branch does not exist – creating from current HEAD"
-              git checkout -B "$BRANCH_NAME"
-            fi
+            git checkout -B "$BRANCH_NAME"
 
             if [ -f README.md ]; then
               echo "Processing README.md..."
