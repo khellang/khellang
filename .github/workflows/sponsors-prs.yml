@@ -1,0 +1,79 @@
+name: Create Sponsors Section PRs
+
+on:
+  workflow_dispatch:
+
+jobs:
+  sponsors-prs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install jq git gh -y
+
+      - name: Authenticate GitHub CLI
+        run: |
+          echo "${{ secrets.GH_BOT_TOKEN }}" | gh auth login --with-token
+
+      - name: Prepare and create PRs
+        run: |
+          git config --global user.email "sponsors-bot@hellang.com"
+          git config --global user.name "Sponsors Bot"
+
+          BRANCH_NAME="add-sponsors-section"
+          PR_TITLE="Add Sponsors section to README"
+          PR_BODY="This adds the standard Sponsors section to the README."
+          SPONSORS_SECTION=$'\n## Sponsors\n\nThis is a test sponsors section'
+
+          gh repo list khellang --source --visibility public --no-archived --limit 100 --json nameWithOwner \
+            | jq -r '.[] | .nameWithOwner' | while read repo; do
+
+            if [ "$repo" = "khellang/EFCore.Sqlite.NodaTime" ]; then
+              echo "Skipping $repo (explicit exception)"
+              continue
+            fi
+
+            echo "Checking $repo..."
+
+            if gh api "repos/$repo/branches/$BRANCH_NAME" > /dev/null 2>&1; then
+              echo "Branch $BRANCH_NAME already exists in $repo – skipping."
+              continue
+            fi
+
+            gh repo clone "$repo" -- --depth=1
+            cd "$(basename "$repo")" || continue
+
+            if [ -f README.md ]; then
+              if grep -q "## Sponsors" README.md; then
+                echo "Existing Sponsors section found – replacing."
+                awk '
+                  BEGIN { skip = 0 }
+                  /^## Sponsors/ { skip = 1; next }
+                  /^## / && skip == 1 { skip = 0 }
+                  skip == 0 { print }
+                ' README.md > README.tmp && mv README.tmp README.md
+              fi
+            
+              echo "$SPONSOR_SECTION" >> README.md
+            
+              if git diff --quiet; then
+                echo "No change in README – skipping commit."
+              else
+                git checkout -b "$BRANCH_NAME"
+                git add README.md
+                git commit -m "$PR_TITLE"
+                git push --set-upstream origin "$BRANCH_NAME"
+                gh pr create \
+                  --title "$PR_TITLE" \
+                  --body "$PR_BODY" \
+                  --head "$BRANCH_NAME" \
+                  --reviewer khellang \
+                  --assignee khellang
+              fi
+            else
+              echo "README.md not found – skipping."
+            fi
+
+            cd ..
+          done
