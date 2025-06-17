@@ -15,6 +15,7 @@ jobs:
         run: |
           git config --global user.email "sponsors-bot@hellang.com"
           git config --global user.name "Sponsors Bot"
+          git config --global url.https://${{ secrets.GH_BOT_TOKEN }}@github.com/.insteadOf https://github.com/
 
           BRANCH_NAME="add-sponsors-section"
           PR_TITLE="Add Sponsors section to README"
