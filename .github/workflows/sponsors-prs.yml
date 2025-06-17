@@ -21,7 +21,7 @@ jobs:
           PR_TITLE="Add Sponsors section to README"
           PR_BODY="This adds the standard Sponsors section to the README."
 
-          gh repo list khellang --source --visibility public --no-archived --limit 100 --json nameWithOwner \
+          gh repo list khellang --source --visibility public --no-archived --limit 100 --json name \
             | jq -r '.[] | .name' | while read repo; do
 
             if [ "$repo" = "EFCore.Sqlite.NodaTime" ]; then
