@@ -41,31 +41,44 @@ jobs:
             cd "$(basename "$repo")" || continue
 
             if [ -f README.md ]; then
-              if grep -q "## Sponsors" README.md; then
-                echo "Existing Sponsors section found – replacing."
-                awk '
-                  BEGIN { skip = 0 }
-                  /^## Sponsors/ { skip = 1; next }
-                  /^## / && skip == 1 { skip = 0 }
-                  skip == 0 { print }
-                ' README.md > README.tmp && mv README.tmp README.md
-              fi
+              # Strip existing Sponsors section
+              awk '
+                BEGIN { skip=0 }
+                /^## Sponsors/ { skip=1; next }
+                /^## [^ ]/ && skip==1 { skip=0 }
+                skip==0 { print }
+              ' README.md > README.tmp && mv README.tmp README.md
             
-              echo "$SPONSOR_SECTION" >> README.md
+              echo "$SPONSORS_SECTION" >> README.md
             
               if git diff --quiet; then
                 echo "No change in README – skipping commit."
               else
-                git checkout -b "$BRANCH_NAME"
+                # Check out or create branch
+                if git ls-remote --exit-code --heads origin "$BRANCH_NAME" &> /dev/null; then
+                  git fetch origin "$BRANCH_NAME"
+                  git checkout "$BRANCH_NAME"
+                else
+                  git checkout -b "$BRANCH_NAME"
+                fi
+              
                 git add README.md
-                git commit -m "$PR_TITLE"
-                git push origin "$BRANCH_NAME"
-                gh pr create \
-                  --title "$PR_TITLE" \
-                  --body "$PR_BODY" \
-                  --head "$BRANCH_NAME" \
-                  --reviewer khellang \
-                  --assignee khellang
+                git commit -m "$PR_TITLE" || echo "Nothing to commit"
+
+                # Force push to update existing remote branch
+                git push origin "$BRANCH_NAME" --force
+                
+                # Check if PR already exists
+                if ! gh pr list --head "$BRANCH_NAME" --state open --json number -q '.[0]'; then
+                  gh pr create \
+                    --title "$PR_TITLE" \
+                    --body "$PR_BODY" \
+                    --head "$BRANCH_NAME" \
+                    --reviewer khellang \
+                    --assignee khellang
+                else
+                  echo "PR already exists for $repo – updated branch with force push."
+                fi
               fi
             else
               echo "README.md not found – skipping."
