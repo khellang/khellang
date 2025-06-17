@@ -49,12 +49,13 @@ jobs:
               if git diff --quiet; then
                 echo "No change in README – skipping commit."
               else
-                # Check out or create branch
                 if git ls-remote --exit-code --heads origin "$BRANCH_NAME" &> /dev/null; then
+                  echo "Remote branch $BRANCH_NAME exists – recreating local branch from it"
                   git fetch origin "$BRANCH_NAME"
-                  git checkout "$BRANCH_NAME"
+                  git checkout -B "$BRANCH_NAME" origin/"$BRANCH_NAME"
                 else
-                  git checkout -b "$BRANCH_NAME"
+                  echo "Remote branch $BRANCH_NAME does not exist – creating it"
+                  git checkout -B "$BRANCH_NAME"
                 fi
               
                 git add README.md
