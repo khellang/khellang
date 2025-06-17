@@ -55,6 +55,7 @@ jobs:
               if git diff --quiet; then
                 echo "No change in README – skipping commit."
               else
+                git remote set-url origin https://${GH_BOT_TOKEN}@github.com/${repo}.git
                 git checkout -b "$BRANCH_NAME"
                 git add README.md
                 git commit -m "$PR_TITLE"
