@@ -32,11 +32,6 @@ jobs:
 
             echo "Checking $repo..."
 
-            if gh api "repos/$repo/branches/$BRANCH_NAME" > /dev/null 2>&1; then
-              echo "Branch $BRANCH_NAME already exists in $repo – skipping."
-              continue
-            fi
-
             gh repo clone "$repo" -- --depth=1
             cd "$(basename "$repo")" || continue
 
