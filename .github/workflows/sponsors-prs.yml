@@ -30,12 +30,28 @@ jobs:
               continue
             fi
 
-            echo "Checking $repo..."
-
-            gh repo clone "$repo"
+            echo "Cloning $repo..."
+            gh repo clone "$repo" -- --depth=1
             cd "$(basename "$repo")" || continue
 
+            DEFAULT_BRANCH=$(git remote show origin | awk '/HEAD branch/ {print $NF}')
+            echo "Detected default branch: $DEFAULT_BRANCH"
+            git checkout "$DEFAULT_BRANCH"
+            git reset --hard
+
+            # Create or reset working branch
+            if git ls-remote --exit-code --heads origin "$BRANCH_NAME" &> /dev/null; then
+              echo "Remote branch $BRANCH_NAME exists – checking out"
+              git fetch origin "$BRANCH_NAME"
+              git checkout -B "$BRANCH_NAME" origin/"$BRANCH_NAME"
+            else
+              echo "Remote branch does not exist – creating from current HEAD"
+              git checkout -B "$BRANCH_NAME"
+            fi
+
             if [ -f README.md ]; then
+              echo "Processing README.md..."
+
               # Strip existing Sponsors section
               awk '
                 BEGIN { skip=0 }
@@ -49,19 +65,8 @@ jobs:
               if git diff --quiet; then
                 echo "No change in README – skipping commit."
               else
-                if git ls-remote --exit-code --heads origin "$BRANCH_NAME" &> /dev/null; then
-                  echo "Remote branch $BRANCH_NAME exists – recreating local branch from it"
-                  git fetch origin "$BRANCH_NAME"
-                  git checkout -B "$BRANCH_NAME" origin/"$BRANCH_NAME"
-                else
-                  echo "Remote branch $BRANCH_NAME does not exist – creating it"
-                  git checkout -B "$BRANCH_NAME"
-                fi
-              
                 git add README.md
                 git commit -m "$PR_TITLE" || echo "Nothing to commit"
-
-                # Force push to update existing remote branch
                 git push origin "$BRANCH_NAME" --force
                 
                 # Check if PR already exists
@@ -81,4 +86,5 @@ jobs:
             fi
 
             cd ..
+            rm -rf "$(basename "$repo")"
           done
