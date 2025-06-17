@@ -20,6 +20,7 @@ jobs:
           BRANCH_NAME="add-sponsors-section"
           PR_TITLE="Add Sponsors section to README"
           PR_BODY="This adds the standard Sponsors section to the README."
+          SPONSOR_TEMPLATE_PATH="$GITHUB_WORKSPACE/.github/sponsors.template.md"
 
           gh repo list khellang --source --visibility public --no-archived --limit 100 --json name \
             | jq -r '.[] | .name' | while read repo; do
@@ -52,7 +53,7 @@ jobs:
               ' README.md > README.tmp && mv README.tmp README.md
 
               REPO="$repo"
-              SPONSORS_SECTION=$(env REPO="$REPO" envsubst < ../.github/sponsors.template.md)
+              SPONSORS_SECTION=$(env REPO="$REPO" envsubst < "$SPONSOR_TEMPLATE_PATH")
               
               echo "$SPONSORS_SECTION" >> README.md
             
