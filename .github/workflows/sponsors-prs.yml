@@ -7,6 +7,9 @@ jobs:
   sponsors-prs:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout master for template
+        uses: actions/checkout@v4
+        
       - name: Authenticate GitHub CLI
         run: |
           echo "${{ secrets.GH_BOT_TOKEN }}" | gh auth login --with-token
