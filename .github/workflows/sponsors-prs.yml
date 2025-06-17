@@ -51,7 +51,7 @@ jobs:
                 skip==0 { print }
               ' README.md > README.tmp && mv README.tmp README.md
 
-              SPONSOR_SECTION=$(cat <<EOF
+              SPONSORS_SECTION="$(cat <<EOF
           
               ## Sponsors
               
@@ -62,8 +62,8 @@ jobs:
               [![Dapper Plus](https://raw.githubusercontent.com/khellang/khellang/refs/heads/master/.github/dapper-plus-sponsor.png)](https://dapper-plus.net/bulk-insert?utm_source=khellang&utm_medium=$repo)
                         
               EOF
-              )
-            
+              )"    
+              
               echo "$SPONSORS_SECTION" >> README.md
             
               if git diff --quiet; then
