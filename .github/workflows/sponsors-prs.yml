@@ -20,19 +20,18 @@ jobs:
           BRANCH_NAME="add-sponsors-section"
           PR_TITLE="Add Sponsors section to README"
           PR_BODY="This adds the standard Sponsors section to the README."
-          SPONSORS_SECTION=$'\n## Sponsors\n\nThis is a test sponsors section'
 
           gh repo list khellang --source --visibility public --no-archived --limit 100 --json nameWithOwner \
-            | jq -r '.[] | .nameWithOwner' | while read repo; do
+            | jq -r '.[] | .name' | while read repo; do
 
-            if [ "$repo" = "khellang/EFCore.Sqlite.NodaTime" ]; then
+            if [ "$repo" = "EFCore.Sqlite.NodaTime" ]; then
               echo "Skipping $repo (explicit exception)"
               continue
             fi
 
             echo "Cloning $repo..."
-            gh repo clone "$repo" -- --depth=1
-            cd "$(basename "$repo")" || continue
+            gh repo clone "khellang/$repo" -- --depth=1
+            cd "$repo" || continue
 
             DEFAULT_BRANCH=$(git remote show origin | awk '/HEAD branch/ {print $NF}')
             echo "Detected default branch: $DEFAULT_BRANCH"
@@ -51,6 +50,19 @@ jobs:
                 /^## [^ ]/ && skip==1 { skip=0 }
                 skip==0 { print }
               ' README.md > README.tmp && mv README.tmp README.md
+
+              SPONSOR_SECTION=$(cat <<EOF
+          
+              ## Sponsors
+              
+              [Entity Framework Extensions](https://entityframework-extensions.net/?utm_source=khellang&utm_medium=$repo) and [Dapper Plus](https://dapper-plus.net/?utm_source=khellang&utm_medium=$repo) are major sponsors and proud to contribute to the development of $repo.
+              
+              [![Entity Framework Extensions](https://raw.githubusercontent.com/khellang/khellang/refs/heads/master/.github/entity-framework-extensions-sponsor.png)](https://entityframework-extensions.net/bulk-insert?utm_source=khellang&utm_medium=$repo)
+              
+              [![Dapper Plus](https://raw.githubusercontent.com/khellang/khellang/refs/heads/master/.github/dapper-plus-sponsor.png)](https://dapper-plus.net/bulk-insert?utm_source=khellang&utm_medium=$repo)
+                        
+              EOF
+              )
             
               echo "$SPONSORS_SECTION" >> README.md
             
@@ -78,5 +90,5 @@ jobs:
             fi
 
             cd ..
-            rm -rf "$(basename "$repo")"
+            rm -rf "$repo"
           done
