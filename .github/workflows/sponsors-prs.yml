@@ -32,7 +32,7 @@ jobs:
 
             echo "Checking $repo..."
 
-            gh repo clone "$repo" -- --depth=1
+            gh repo clone "$repo"
             cd "$(basename "$repo")" || continue
 
             if [ -f README.md ]; then
