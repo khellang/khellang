@@ -58,13 +58,13 @@ jobs:
                 git checkout -b "$BRANCH_NAME"
                 git add README.md
                 git commit -m "$PR_TITLE"
+                git push origin "$BRANCH_NAME"
                 gh pr create \
                   --title "$PR_TITLE" \
                   --body "$PR_BODY" \
                   --head "$BRANCH_NAME" \
                   --reviewer khellang \
-                  --assignee khellang \
-                  --fill
+                  --assignee khellang
               fi
             else
               echo "README.md not found – skipping."
