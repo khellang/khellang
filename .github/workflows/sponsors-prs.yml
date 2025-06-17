@@ -55,17 +55,16 @@ jobs:
               if git diff --quiet; then
                 echo "No change in README – skipping commit."
               else
-                git remote set-url origin https://${GH_BOT_TOKEN}@github.com/${repo}.git
                 git checkout -b "$BRANCH_NAME"
                 git add README.md
                 git commit -m "$PR_TITLE"
-                git push --set-upstream origin "$BRANCH_NAME"
                 gh pr create \
                   --title "$PR_TITLE" \
                   --body "$PR_BODY" \
                   --head "$BRANCH_NAME" \
                   --reviewer khellang \
-                  --assignee khellang
+                  --assignee khellang \
+                  --fill
               fi
             else
               echo "README.md not found – skipping."
